@@ -33,12 +33,15 @@ import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_TO_POSITION;
 import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_USING_ENCODER;
 import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.STOP_AND_RESET_ENCODER;
 
+import static java.lang.Enum.valueOf;
+
 import android.util.Size;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -71,14 +74,15 @@ public class Mecanum extends LinearOpMode {
     DcMotor motorBackRight;
     DcMotor motorArmRight;
     DcMotor motorArmLeft;
-    Servo servoElbowLeft;
-    Servo servoElbowRight;
+    DcMotor motorElevator;
     Servo servoWrist;
     Servo servoIntake;
     IMU imu;
     YawPitchRollAngles myRobotOrientation;
     int portal1ViewId;
     int portal2ViewId;
+
+    Boolean overideLimit;
 
 //    private Position cameraPosition = new Position(DistanceUnit.INCH,
 //            0, 0, 0, 0);
@@ -98,27 +102,21 @@ public class Mecanum extends LinearOpMode {
         motorBackRight = hardwareMap.get(DcMotor.class, "backRight");
         motorArmRight  = hardwareMap.get(DcMotor.class, "armRight"); //Expansion
         motorArmLeft  = hardwareMap.get(DcMotor.class, "armLeft");
-        servoElbowLeft = hardwareMap.servo.get("elbowRight");
-        servoElbowRight = hardwareMap.servo.get("elbowLeft");
-        servoWrist = hardwareMap.servo.get("servoWrist");
-        servoIntake = hardwareMap.servo.get("servoIntake");
+        motorElevator = hardwareMap.get(DcMotor.class, "elevator");
+//        motor2 = hardwareMap.get(DcMotor.class, "motor2");
+        servoWrist = hardwareMap.servo.get("wrist");
+        servoIntake = hardwareMap.servo.get("intake");
         imu = hardwareMap.get(IMU.class, "imu");
         initAprilTag();
 
-
-        colorLocator = new ColorBlobLocatorProcessor.Builder()
-                .setTargetColorRange(ColorRange.BLUE)         // use a predefined color match
-                .setContourMode(ColorBlobLocatorProcessor.ContourMode.EXTERNAL_ONLY)    // exclude blobs inside blobs
-                .setRoi(ImageRegion.asUnityCenterCoordinates(-0.5, 0.5, 0.5, -0.5))  // search central 1/4 of camera view
-                .setDrawContours(true)                        // Show contours on the Stream Preview
-                .setBlurSize(5)                               // Smooth the transitions between different colors in image
-                .build();
 
 
         motorFrontLeft.setDirection(DcMotor.Direction.REVERSE);
         motorBackLeft.setDirection(DcMotor.Direction.FORWARD);
         motorFrontRight.setDirection(DcMotor.Direction.FORWARD);
         motorBackRight.setDirection(DcMotor.Direction.REVERSE);
+        motorElevator.setDirection(DcMotor.Direction.FORWARD);
+
 
         // Wait for the game to start (driver presses START)
         telemetry.addData("Status", "Initialized");
@@ -156,96 +154,170 @@ public class Mecanum extends LinearOpMode {
         init_Orientation();
 
 
-//        int elevatorEncoderMAX = 5333;
-//        int armEncoderFLAT = 2333;
+        int elevatorEncoderMAX = 5400; //5500
+        int elevatorEncoderMIN = 0;
+        int elevatorScore1 = 1600;
+        int elevatorScore2 = 1100;
+        int elevatorHigh = 5450;
+        int elevatorFloor = 1700;
+        int elevatorHP = 0;
+        int armHome = 600;
+        int armFloor = 2400;
+        int armHP = 2400;
+        int armScore1 = 375;
+        int armHigh = 200;
+        int armMin = 250;
+        int armMax = 2600;
+        double servoLow = 0.5;
+        double servoMid = 0.7;
+        double servoHigh = 0.85;
+        overideLimit = false;
 
 
-//        motorElevator.setMode(STOP_AND_RESET_ENCODER);
-//        motorArmLeft.setMode(STOP_AND_RESET_ENCODER);
-//        motorArmRight.setMode(STOP_AND_RESET_ENCODER);
 
         motorArmLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorArmRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
 
+        motorElevator.setMode(STOP_AND_RESET_ENCODER);
+        motorArmLeft.setMode(STOP_AND_RESET_ENCODER);
+        motorArmRight.setMode(STOP_AND_RESET_ENCODER);
+        motorFrontLeft.setMode(STOP_AND_RESET_ENCODER);
+        motorFrontRight.setMode(STOP_AND_RESET_ENCODER);
+        motorBackLeft.setMode(STOP_AND_RESET_ENCODER);
+        motorBackRight.setMode(STOP_AND_RESET_ENCODER);
+
+
+        servoWrist.setPosition(0.5);
+        servoIntake.setPosition(1);
+
+
+
         waitForStart();
         runtime.reset();
         if (isStopRequested()) return;
-
-
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
             telemetryAprilTag();
+            double max;
             myRobotOrientation = imu.getRobotYawPitchRollAngles();
-            yaw = imu.getRobotYawPitchRollAngles().getYaw();
+            yaw   = (myRobotOrientation.getYaw(AngleUnit.DEGREES));
 //            pitch = myRobotOrientation.getPitch(AngleUnit.DEGREES);
 //            roll  = myRobotOrientation.getRoll(AngleUnit.DEGREES);
 
-//            motorElevator.setMode(RUN_USING_ENCODER);
-//            motorArmLeft.setMode(RUN_USING_ENCODER);
-//            motorArmRight.setMode(RUN_USING_ENCODER);
+            motorElevator.setMode(RUN_USING_ENCODER);
+            motorArmLeft.setMode(RUN_USING_ENCODER);
+            motorArmRight.setMode(RUN_USING_ENCODER);
+            motorFrontLeft.setMode(RUN_USING_ENCODER);
+            motorFrontRight.setMode(RUN_USING_ENCODER);
+            motorBackLeft.setMode(RUN_USING_ENCODER);
+            motorBackRight.setMode(RUN_USING_ENCODER);
 
 
-//            motorElevator.setPower(gamepad2.right_stick_y);
-
-
-            if(gamepad2.a){ //high
-                servoElbowLeft.setPosition(0.4);
-                servoElbowRight.setPosition(0.6);
+            if(gamepad2.right_bumper){ //Home
+                goToPosition(armHome, motorArmLeft); //Left Arm
+                goToPosition(armHome, motorArmRight, motorArmLeft.getCurrentPosition()); //Right Arm
+                goToPosition(elevatorEncoderMIN, motorElevator); //Elevator 0
+                servoWrist.setPosition(servoMid); //Wrist Mid
             }
-            else if(gamepad2.b){ //low
-                servoElbowLeft.setPosition(0.5);
-                servoElbowRight.setPosition(0.5);
+            else if(gamepad2.b){ //Score 1
+                goToPosition(armScore1, motorArmLeft); //Left Arm
+                goToPosition(armScore1, motorArmRight, motorArmLeft.getCurrentPosition()); //Right Arm
+                servoWrist.setPosition(servoMid); //Wrist Mid
+                goToPosition(elevatorScore1, motorElevator); //Elevator Score 1
             }
-            else if(gamepad2.x){
-                servoElbowLeft.setPosition(0.85);
-                servoElbowRight.setPosition(0.15);
+            else if(gamepad2.y){ //Score 2
+                servoWrist.setPosition(servoLow); //Wrist Low
+                goToPosition(elevatorScore2, motorElevator); //Elevator Score 2
             }
-            else if(gamepad2.y){
-                servoElbowLeft.setPosition(0.15);
-                servoElbowRight.setPosition(0.85);
+            else if(gamepad2.x)
+            { //Floor
+                goToPosition(armFloor, motorArmLeft); //Left Arm
+                goToPosition(armFloor, motorArmRight, motorArmLeft.getCurrentPosition()); //Right Arm
+                goToPosition(elevatorFloor, motorElevator); //Elevator Floor
+                if(motorElevator.getCurrentPosition()>1365)
+                {
+                    servoWrist.setPosition(servoLow); //Wrist Low
+                }
             }
-
-            if(gamepad2.right_trigger>0.8){
+            else if(gamepad2.a)
+            { //HP
+                goToPosition(armHP, motorArmLeft); //Left Arm
+                goToPosition(armHP, motorArmRight, motorArmLeft.getCurrentPosition()); //Right Arm
+                goToPosition(elevatorHP, motorElevator); //Elevator HP
+                servoWrist.setPosition(servoHigh); //Servo High
+            }
+            else if(gamepad2.left_trigger>0.8){ //Open Claw
                 servoIntake.setPosition(0);
             }
-            else if(gamepad2.left_trigger>0.8){
+            else if(gamepad2.right_trigger>0.8){ //Close Claw
                 servoIntake.setPosition(1);
             }
+            else if(gamepad2.left_bumper){ //High Basket
+                goToPosition(armHigh, motorArmLeft); //Left Arm
+                goToPosition(armHigh, motorArmRight, motorArmLeft.getCurrentPosition()); //Right Arm
+                goToPosition(elevatorHigh, motorElevator); //Elevator HP
+                servoWrist.setPosition(servoHigh); //Servo High
+            }
+            else
+            {
+                if((motorElevator.getCurrentPosition()>elevatorEncoderMAX && gamepad2.right_stick_y<0) && overideLimit == false){
+                    motorElevator.setPower(0);
+                }
+                else if((motorElevator.getCurrentPosition()<elevatorEncoderMIN && gamepad2.right_stick_y>0) && overideLimit == false){
+                    motorElevator.setPower(0);
+                }
+                else{
+                    motorElevator.setPower(-gamepad2.right_stick_y);
+                }
 
-            if(gamepad2.right_bumper){
+                if((motorArmLeft.getCurrentPosition()>armMax && gamepad2.left_stick_y>0) && !overideLimit){
+                    motorArmLeft.setPower(0);
+                    motorArmRight.setPower(0);
+                }
+                else if((motorArmLeft.getCurrentPosition()<armMin && gamepad2.left_stick_y<0) && !overideLimit){
+                    motorArmLeft.setPower(0);
+                    motorArmRight.setPower(0);
+                }
+                else{
+                    motorArmLeft.setPower(gamepad2.left_stick_y);
+                    motorArmRight.setPower(gamepad2.left_stick_y);
+                }
+            }
+
+
+
+            if(gamepad2.start){
+                overideLimit = true;
+            }
+            else {
+                overideLimit = false;
+            }
+
+
+
+
+
+//            if(gamepad2.b){
+//                servoWrist.setPosition(0.7);
+//            }
+//            else if(gamepad2.y){
+//                servoWrist.setPosition(0.85);
+//            }
+//
+//            if(gamepad1.a){
+//                servoIntake.setPosition(0);
+//            }
+//            else if(gamepad1.b){
+//                servoIntake.setPosition(1);
+//            }
+//
+//            if(gamepad2.a){ //low
 //                servoWrist.setPosition(0.5);
-            }
+//            }
 
-            if(gamepad2.y){
-                motorArmRight.setMode(RUN_TO_POSITION);
-                motorArmLeft.setMode(RUN_TO_POSITION);
-                motorArmRight.setTargetPosition(50);
-                motorArmLeft.setTargetPosition(-50);
-            }
-            else{
-                motorArmLeft.setPower(-gamepad2.left_stick_y);
-                motorArmRight.setPower(gamepad2.left_stick_y);
-                motorArmRight.setMode(RUN_USING_ENCODER);
-                motorArmLeft.setMode(RUN_USING_ENCODER);
-            }
 
-            if(gamepad2.right_trigger>0.8){
-                servoIntake.setPosition(1);
-            }
-            else if(gamepad2.left_trigger>0.8){
-                servoIntake.setPosition(0);
-            }
 
-            if(gamepad2.right_bumper){
-                servoWrist.setPosition(1);
-            }
-            else if(gamepad2.left_bumper){
-                servoWrist.setPosition(0);
-            }
-            else if(gamepad2.x){
-                servoWrist.setPosition(0.5);
-            }
 
 
 
@@ -261,7 +333,6 @@ public class Mecanum extends LinearOpMode {
             {
                 imu.resetYaw();
             }
-
             if(isFieldCentric==1){
                 centric = "Field";
             }
@@ -269,13 +340,10 @@ public class Mecanum extends LinearOpMode {
                 centric = "Robot";
             }
 
-
-
-
             // POV Mode uses left joystick to go forward & strafe, and right joystick to rotate.
             double y = -gamepad1.left_stick_y;  // Note: pushing stick forward gives negative value
             double x = gamepad1.left_stick_x;
-            double rx = -gamepad1.right_stick_x*0.8;
+            double rx = gamepad1.right_stick_x*0.8;
 
             if(gamepad1.right_bumper)
             {
@@ -316,7 +384,7 @@ public class Mecanum extends LinearOpMode {
 //                frontRightPower /= max;
 //                backLeftPower   /= max;
 //                backRightPower /= max;
-//            }
+////            }
 
             if(slow)
             {
@@ -330,54 +398,24 @@ public class Mecanum extends LinearOpMode {
 
 
             // Send calculated power to wheels
-            motorFrontLeft.setPower(frontLeftPower);
-            motorFrontRight.setPower(frontRightPower);
-            motorBackLeft.setPower(backLeftPower);
-            motorBackRight.setPower(backRightPower);
+            motorFrontLeft.setPower(-frontLeftPower);
+            motorFrontRight.setPower(-frontRightPower);
+            motorBackLeft.setPower(-backLeftPower);
+            motorBackRight.setPower(-backRightPower);
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
-            telemetry.addData("Front left/Right", "%4.2f, %4.2f", frontLeftPower, frontRightPower);
-            telemetry.addData("Back  left/Right", "%4.2f, %4.2f", backLeftPower, backRightPower);
+//            telemetry.addData("Front left/Right", "%4.2f, %4.2f", frontLeftPower, frontRightPower);
+//            telemetry.addData("Back  left/Right", "%4.2f, %4.2f", backLeftPower, backRightPower);
             telemetry.addData(centric, "Centric");
-//            telemetry.addData("Elevator Encoder", motorElevator.getCurrentPosition());
-            telemetry.addData("Left arm Encoders", motorArmLeft.getCurrentPosition());
-            telemetry.addData("Right arm Encoders", motorArmRight.getCurrentPosition());
-            telemetry.addData("Left Arm Mode",motorArmLeft.getMode());
-            telemetry.addData("Right Arm Mode",motorArmRight.getMode());
-            telemetry.addData("Right Arm target",motorArmRight.getTargetPosition());
-            telemetry.addData("Yaw", yaw);
-
-
+            telemetry.addData("Yaw", yaw%360);
+            telemetry.addData("Elevator Encoder", motorElevator.getCurrentPosition());
 //            telemetry.addData("Left Arm Velocity", motorArmLeft.getPower());
+            telemetry.addData("Left arm Encoders", motorArmLeft.getCurrentPosition());
+//            telemetry.addData("Right arm Encoders", motorArmRight.getCurrentPosition());
+            telemetry.addData("Motor Front Left Encoder Pos", motorFrontLeft.getCurrentPosition());
 
-
-
-            // APRILTAGS Main Loop
-            // WARNING:  To be able to view the stream preview on the Driver Station, this code runs in INIT mode.
-
-//                telemetry.addData("preview on/off", "... Camera Stream\n");
-
-                // Read the current list
-                List<ColorBlobLocatorProcessor.Blob> blobs = colorLocator.getBlobs();
-
-                ColorBlobLocatorProcessor.Util.filterByArea(50, 20000, blobs);  // filter out very small blobs.
-
-
-//                telemetry.addLine(" Area Density Aspect  Center");
-
-                // Display the size (area) and center location for each Blob.
-//                for(ColorBlobLocatorProcessor.Blob b : blobs)
-//                {
-//                    RotatedRect boxFit = b.getBoxFit();
-////                    telemetry.addLine(String.format("%5d  %4.2f   %5.2f  (%3d,%3d)",
-////                            b.getContourArea(), b.getDensity(), b.getAspectRatio(), (int) boxFit.center.x, (int) boxFit.center.y));
-//                }
-
-                // Just show some basic telemetry to demonstrate both processors are working in parallel
-                // on their respective cameras. If you want to see more detail about the information you
-                // can get back from the processor, you should look at ConceptAprilTag.
-//                telemetry.addData("Number of tags in Camera 2", aprilTagProcessor.getDetections().size());
+            //          telemetry.addData("Number of tags in Camera 2", aprilTagProcessor.getDetections().size());
     //          telemetry.addData("Number of tags in Camera 1", aprilTagProcessor2.getDetections().size());
 
 
@@ -460,9 +498,116 @@ public class Mecanum extends LinearOpMode {
 
     }   // end method initAprilTag()
 
-    public void resetEncoders(){
+//    public void resetEncoders(){
 //        motorElevator.setTargetPosition(0);
+//    }
+
+
+    public void goToPosition(int target, DcMotor motor) {
+        int encoder = motor.getCurrentPosition();
+        int difference = (target - encoder);
+
+        if(difference > 10000)
+        {
+            motor.setPower(1.0);
+        }
+        else if(difference > 500)
+        {
+            motor.setPower(1.0);
+        }
+        else if(difference > 300)
+        {
+            motor.setPower(0.5);
+        }
+        else if(difference > 200)
+        {
+            motor.setPower(0.25);
+        }
+        else if(difference > 30)
+        {
+            motor.setPower(0.20);
+        }
+        else if(difference > 25)
+        {
+            motor.setPower(0);
+        }
+        else if(difference > -25)
+        {
+            motor.setPower(0);
+        }
+        else if(difference > -30)
+        {
+            motor.setPower(-0.20);
+        }
+        else if(difference > -200)
+        {
+            motor.setPower(-0.25);
+        }
+        else if(difference > -300)
+        {
+            motor.setPower(-0.5);
+        }
+        else if(difference > -500)
+        {
+            motor.setPower(-1.0);
+        }
+        else if(difference > -10000)
+        {
+            motor.setPower(-1.0);
+        }
     }
 
+    public void goToPosition(int target, DcMotor motor, int encoder) {
+        int difference = (target - encoder);
+
+        if(difference > 10000)
+        {
+            motor.setPower(1.0);
+        }
+        else if(difference > 500)
+        {
+            motor.setPower(1.0);
+        }
+        else if(difference > 300)
+        {
+            motor.setPower(0.5);
+        }
+        else if(difference > 200)
+        {
+            motor.setPower(0.25);
+        }
+        else if(difference > 30)
+        {
+            motor.setPower(0.20);
+        }
+        else if(difference > 25)
+        {
+            motor.setPower(0);
+        }
+        else if(difference > -25)
+        {
+            motor.setPower(0);
+        }
+        else if(difference > -30)
+        {
+            motor.setPower(-0.20);
+        }
+        else if(difference > -200)
+        {
+            motor.setPower(-0.25);
+        }
+        else if(difference > -300)
+        {
+            motor.setPower(-0.5);
+        }
+        else if(difference > -500)
+        {
+            motor.setPower(-1.0);
+        }
+        else if(difference > -10000)
+        {
+            motor.setPower(-1.0);
+        }
+    }
 
 }
