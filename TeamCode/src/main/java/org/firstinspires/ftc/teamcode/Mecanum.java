@@ -123,9 +123,9 @@ public class Mecanum extends LinearOpMode {
         telemetry.update();
 
 
-        int[] viewIds = VisionPortal.makeMultiPortalView(2, VisionPortal.MultiPortalLayout.VERTICAL);
-        portal1ViewId = viewIds[0];
-        portal2ViewId = viewIds[1];
+//        int[] viewIds = VisionPortal.makeMultiPortalView(2, VisionPortal.MultiPortalLayout.VERTICAL);
+//        portal1ViewId = viewIds[0];
+//        portal2ViewId = viewIds[1];
 
 //        aprilTagCamera = new VisionPortal.Builder()
 //                .setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"))
@@ -151,10 +151,9 @@ public class Mecanum extends LinearOpMode {
         boolean slow = false;
         int isFieldCentric = 1;
         imu.resetYaw();
-        init_Orientation();
 
 
-        int elevatorEncoderMAX = 5400; //5500
+        int elevatorEncoderMAX = 5250; //5500
         int elevatorEncoderMIN = 0;
         int elevatorScore1 = 1600;
         int elevatorScore2 = 1100;
@@ -162,7 +161,7 @@ public class Mecanum extends LinearOpMode {
         int elevatorFloor = 1700;
         int elevatorHP = 0;
         int armHome = 600;
-        int armFloor = 2400;
+        int armFloor = 2250;
         int armHP = 2400;
         int armScore1 = 375;
         int armHigh = 200;
@@ -177,19 +176,18 @@ public class Mecanum extends LinearOpMode {
 
         motorArmLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorArmRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-
-        motorElevator.setMode(STOP_AND_RESET_ENCODER);
-        motorArmLeft.setMode(STOP_AND_RESET_ENCODER);
-        motorArmRight.setMode(STOP_AND_RESET_ENCODER);
-        motorFrontLeft.setMode(STOP_AND_RESET_ENCODER);
-        motorFrontRight.setMode(STOP_AND_RESET_ENCODER);
-        motorBackLeft.setMode(STOP_AND_RESET_ENCODER);
-        motorBackRight.setMode(STOP_AND_RESET_ENCODER);
-
-
-        servoWrist.setPosition(0.5);
+        servoWrist.setPosition(servoLow);
         servoIntake.setPosition(1);
+
+//        motorElevator.setMode(STOP_AND_RESET_ENCODER);
+//        motorArmLeft.setMode(STOP_AND_RESET_ENCODER);
+//        motorArmRight.setMode(STOP_AND_RESET_ENCODER);
+//        motorFrontLeft.setMode(STOP_AND_RESET_ENCODER);
+//        motorFrontRight.setMode(STOP_AND_RESET_ENCODER);
+//        motorBackLeft.setMode(STOP_AND_RESET_ENCODER);
+//        motorBackRight.setMode(STOP_AND_RESET_ENCODER);
+
+
 
 
 
@@ -202,16 +200,14 @@ public class Mecanum extends LinearOpMode {
             double max;
             myRobotOrientation = imu.getRobotYawPitchRollAngles();
             yaw   = (myRobotOrientation.getYaw(AngleUnit.DEGREES));
-//            pitch = myRobotOrientation.getPitch(AngleUnit.DEGREES);
-//            roll  = myRobotOrientation.getRoll(AngleUnit.DEGREES);
 
-            motorElevator.setMode(RUN_USING_ENCODER);
-            motorArmLeft.setMode(RUN_USING_ENCODER);
-            motorArmRight.setMode(RUN_USING_ENCODER);
-            motorFrontLeft.setMode(RUN_USING_ENCODER);
-            motorFrontRight.setMode(RUN_USING_ENCODER);
-            motorBackLeft.setMode(RUN_USING_ENCODER);
-            motorBackRight.setMode(RUN_USING_ENCODER);
+//            motorElevator.setMode(RUN_USING_ENCODER);
+//            motorArmLeft.setMode(RUN_USING_ENCODER);
+//            motorArmRight.setMode(RUN_USING_ENCODER);
+//            motorFrontLeft.setMode(RUN_USING_ENCODER);
+//            motorFrontRight.setMode(RUN_USING_ENCODER);
+//            motorBackLeft.setMode(RUN_USING_ENCODER);
+//            motorBackRight.setMode(RUN_USING_ENCODER);
 
 
             if(gamepad2.right_bumper){ //Home
@@ -295,6 +291,16 @@ public class Mecanum extends LinearOpMode {
             }
 
 
+            if(gamepad2.back){
+                motorElevator.setMode(STOP_AND_RESET_ENCODER);
+                motorArmRight.setMode(STOP_AND_RESET_ENCODER);
+                motorArmLeft.setMode(STOP_AND_RESET_ENCODER);
+            }
+            else{
+                motorElevator.setMode(RUN_USING_ENCODER);
+                motorArmRight.setMode(RUN_USING_ENCODER);
+                motorArmLeft.setMode(RUN_USING_ENCODER);
+            }
 
 
 
@@ -408,7 +414,7 @@ public class Mecanum extends LinearOpMode {
 //            telemetry.addData("Front left/Right", "%4.2f, %4.2f", frontLeftPower, frontRightPower);
 //            telemetry.addData("Back  left/Right", "%4.2f, %4.2f", backLeftPower, backRightPower);
             telemetry.addData(centric, "Centric");
-            telemetry.addData("Yaw", yaw%360);
+            telemetry.addData("Yaw", yaw);
             telemetry.addData("Elevator Encoder", motorElevator.getCurrentPosition());
 //            telemetry.addData("Left Arm Velocity", motorArmLeft.getPower());
             telemetry.addData("Left arm Encoders", motorArmLeft.getCurrentPosition());
@@ -609,5 +615,6 @@ public class Mecanum extends LinearOpMode {
             motor.setPower(-1.0);
         }
     }
+
 
 }
