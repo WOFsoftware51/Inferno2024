@@ -13,8 +13,8 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 
-@Autonomous(name = "Human Player", group = "", preselectTeleOp = "Mecanum")
-public class HPAuton extends LinearOpMode {
+@Autonomous(name = "Left Side Push", group = "", preselectTeleOp = "Mecanum")
+public class LeftSidePushAuton extends LinearOpMode {
 
     ElapsedTime runtime = new ElapsedTime();
     DcMotor motorFrontLeft;
@@ -130,7 +130,7 @@ public class HPAuton extends LinearOpMode {
             while(!score1){
                 score1();
             }
-            while(motorFrontLeft.getCurrentPosition() > -1125){ //about 28 inches (1167)
+            while(motorFrontLeft.getCurrentPosition() > -1250){ //about 28 inches (1167)
                 driveScore1(0, 0.3, 0);
             }
             driveScore1(0, 0, 0);
@@ -138,80 +138,81 @@ public class HPAuton extends LinearOpMode {
             while(!score2){
                 score2();
             }
-            sleep(50);
+            sleep(100);
             while(motorFrontLeft.getCurrentPosition() < -1000){ //about 28 inches (1167)
                 driveScore2(0, -0.3, 0);
             }
             driveScore2(0, 0.0, 0);
             stopMotors();
 
-            while(motorFrontLeft.getCurrentPosition() > -2200){
-                driveHome(0.3, 0, 0);
+            while(motorFrontLeft.getCurrentPosition() < 200){ //-2200
+                driveHome(-0.3, 0, 0);
             }
             driveHome(0, 0, 0);
             stopMotors();
 
-            sleep(50);
-            while (motorFrontLeft.getCurrentPosition() > -3500) { //about 24 inches/1 block
+            sleep(100);
+            while (motorFrontLeft.getCurrentPosition() > -1100) { //-3500
                 drive(0, 0.3, 0);
             }
             drive(0, 0, 0);
             resetDriveEncoders();
 
-            sleep(50);
-            while (motorFrontLeft.getCurrentPosition() > -1000) {
-                drive(0, 0, 0.3);
+            sleep(100);
+            while (motorFrontLeft.getCurrentPosition() < 1050) {
+                drive(0, 0, -0.3);
             }
             drive(0, 0, 0);
             resetDriveEncoders();
 
-            sleep(50);
-            while (motorFrontLeft.getCurrentPosition() > -450) {
+            sleep(100);
+            while (motorFrontLeft.getCurrentPosition() > -550) {
                 drive(0, 0.3, 0);
             }
             drive(0, 0, 0);
             resetDriveEncoders();
 
-            sleep(50);
-            while (motorFrontLeft.getCurrentPosition() > -2200) { //about 24 inches/1 block
-                drive(0.3, 0, 0);
-            }
-            drive(0, 0, 0);
-            sleep(50);
-            while (motorFrontLeft.getCurrentPosition() < -50) { //about 24 inches/1 block
+            sleep(100);
+            while (motorFrontLeft.getCurrentPosition() < 2100) { //about 24 inches/1 block
                 drive(-0.3, 0, 0);
             }
             drive(0, 0, 0);
+            sleep(100);
+            while (motorFrontLeft.getCurrentPosition() > 100) { //about 24 inches/1 block
+                drive(0.3, 0, 0);
+            }
+            drive(0, 0, 0);
             resetDriveEncoders();
 
-            sleep(50);
-            while (motorFrontLeft.getCurrentPosition() > -250) {
+            sleep(100);
+            while (motorFrontLeft.getCurrentPosition() > -300) {
                 drive(0, 0.3, 0);
             }
             drive(0, 0, 0);
             resetDriveEncoders();
 
-            sleep(50);
-            while (motorFrontLeft.getCurrentPosition() > -2100) { //about 24 inches/1 block
-                drive(0.3, 0, 0);
-            }
-            drive(0, 0, 0);
-            sleep(50);
-            while (motorFrontLeft.getCurrentPosition() < -50) { //about 24 inches/1 block
+            sleep(100);
+            while (motorFrontLeft.getCurrentPosition() < 2100) { //about 24 inches/1 block
                 drive(-0.3, 0, 0);
             }
             drive(0, 0, 0);
+            sleep(100);
+            while (motorFrontLeft.getCurrentPosition() > 100) { //about 24 inches/1 block
+                drive(0.3, 0, 0);
+            }
+            drive(0, 0, 0);
             resetDriveEncoders();
 
-            sleep(50);
-            while (motorFrontLeft.getCurrentPosition() > -200) {
+            sleep(100);
+            while (motorFrontLeft.getCurrentPosition() > -350) {
                 drive(0, 0.3, 0);
             }
             drive(0, 0, 0);
+            resetDriveEncoders();
 
-            sleep(50);
-            while (motorFrontLeft.getCurrentPosition() > -2200) { //about 24 inches/1 block
-                drive(0.3, 0, 0);
+            sleep(100);
+            while (motorFrontLeft.getCurrentPosition() < 2100) { //about 24 inches/1 block
+                drive(-0.3, 0, 0);
             }
             drive(0, 0, 0);
         }

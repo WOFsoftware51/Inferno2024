@@ -4,6 +4,7 @@ import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_USING_ENCODER;
 import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.STOP_AND_RESET_ENCODER;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.IMU;
@@ -12,7 +13,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
-
+@Disabled
 @Autonomous(name = "Test Auton", group = "", preselectTeleOp = "Mecanum")
 public class TestAuton extends LinearOpMode {
 
@@ -180,7 +181,7 @@ public class TestAuton extends LinearOpMode {
             sleep(100);
             while (motorFrontLeft.getCurrentPosition() > -2000) { //about 24 inches/1 block
                 drive(0.3, 0, 0);
-            }
+            }  
             drive(0, 0, 0);
             sleep(100);
             while (motorFrontLeft.getCurrentPosition() < -200) { //about 24 inches/1 block

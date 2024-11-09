@@ -150,7 +150,6 @@ public class Mecanum extends LinearOpMode {
 
         boolean slow = false;
         int isFieldCentric = 1;
-        imu.resetYaw();
 
 
         int elevatorEncoderMAX = 5250; //5500
@@ -167,9 +166,9 @@ public class Mecanum extends LinearOpMode {
         int armHigh = 200;
         int armMin = 250;
         int armMax = 2600;
-        double servoLow = 0.5;
-        double servoMid = 0.7;
-        double servoHigh = 0.85;
+        double servoLow = 0.45;
+        double servoMid = 0.65;
+        double servoHigh = 0.87;
         overideLimit = false;
 
 
@@ -214,7 +213,6 @@ public class Mecanum extends LinearOpMode {
                 goToPosition(armHome, motorArmLeft); //Left Arm
                 goToPosition(armHome, motorArmRight, motorArmLeft.getCurrentPosition()); //Right Arm
                 goToPosition(elevatorEncoderMIN, motorElevator); //Elevator 0
-                servoWrist.setPosition(servoMid); //Wrist Mid
             }
             else if(gamepad2.b){ //Score 1
                 goToPosition(armScore1, motorArmLeft); //Left Arm

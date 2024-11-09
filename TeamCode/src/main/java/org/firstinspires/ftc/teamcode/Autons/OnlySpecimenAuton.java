@@ -4,6 +4,7 @@ import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_USING_ENCODER;
 import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.STOP_AND_RESET_ENCODER;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.IMU;
@@ -12,9 +13,8 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
-
-@Autonomous(name = "Human Player", group = "", preselectTeleOp = "Mecanum")
-public class HPAuton extends LinearOpMode {
+@Autonomous(name = "Only Specimen Auton", group = "", preselectTeleOp = "Mecanum")
+public class OnlySpecimenAuton extends LinearOpMode {
 
     ElapsedTime runtime = new ElapsedTime();
     DcMotor motorFrontLeft;
@@ -50,7 +50,7 @@ public class HPAuton extends LinearOpMode {
     boolean score2;
 
     @Override
-    public void runOpMode() //throws InterruptedException 
+    public void runOpMode() //throws InterruptedException
     {
         // Declare our motors
         // Make sure your ID's match your configuration
@@ -124,13 +124,12 @@ public class HPAuton extends LinearOpMode {
 
         waitForStart();
 
-        if(opModeIsActive())
-        { //24 inches = 1 block
+        if(opModeIsActive()) { //24 inches = 1 block
             sleep(50);
             while(!score1){
                 score1();
             }
-            while(motorFrontLeft.getCurrentPosition() > -1125){ //about 28 inches (1167)
+            while(motorFrontLeft.getCurrentPosition() > -1250){ //about 28 inches (1167)
                 driveScore1(0, 0.3, 0);
             }
             driveScore1(0, 0, 0);
@@ -138,86 +137,14 @@ public class HPAuton extends LinearOpMode {
             while(!score2){
                 score2();
             }
-            sleep(50);
+            sleep(100);
             while(motorFrontLeft.getCurrentPosition() < -1000){ //about 28 inches (1167)
                 driveScore2(0, -0.3, 0);
             }
             driveScore2(0, 0.0, 0);
             stopMotors();
-
-            while(motorFrontLeft.getCurrentPosition() > -2200){
-                driveHome(0.3, 0, 0);
-            }
-            driveHome(0, 0, 0);
-            stopMotors();
-
-            sleep(50);
-            while (motorFrontLeft.getCurrentPosition() > -3500) { //about 24 inches/1 block
-                drive(0, 0.3, 0);
-            }
-            drive(0, 0, 0);
-            resetDriveEncoders();
-
-            sleep(50);
-            while (motorFrontLeft.getCurrentPosition() > -1000) {
-                drive(0, 0, 0.3);
-            }
-            drive(0, 0, 0);
-            resetDriveEncoders();
-
-            sleep(50);
-            while (motorFrontLeft.getCurrentPosition() > -450) {
-                drive(0, 0.3, 0);
-            }
-            drive(0, 0, 0);
-            resetDriveEncoders();
-
-            sleep(50);
-            while (motorFrontLeft.getCurrentPosition() > -2200) { //about 24 inches/1 block
-                drive(0.3, 0, 0);
-            }
-            drive(0, 0, 0);
-            sleep(50);
-            while (motorFrontLeft.getCurrentPosition() < -50) { //about 24 inches/1 block
-                drive(-0.3, 0, 0);
-            }
-            drive(0, 0, 0);
-            resetDriveEncoders();
-
-            sleep(50);
-            while (motorFrontLeft.getCurrentPosition() > -250) {
-                drive(0, 0.3, 0);
-            }
-            drive(0, 0, 0);
-            resetDriveEncoders();
-
-            sleep(50);
-            while (motorFrontLeft.getCurrentPosition() > -2100) { //about 24 inches/1 block
-                drive(0.3, 0, 0);
-            }
-            drive(0, 0, 0);
-            sleep(50);
-            while (motorFrontLeft.getCurrentPosition() < -50) { //about 24 inches/1 block
-                drive(-0.3, 0, 0);
-            }
-            drive(0, 0, 0);
-            resetDriveEncoders();
-
-            sleep(50);
-            while (motorFrontLeft.getCurrentPosition() > -200) {
-                drive(0, 0.3, 0);
-            }
-            drive(0, 0, 0);
-
-            sleep(50);
-            while (motorFrontLeft.getCurrentPosition() > -2200) { //about 24 inches/1 block
-                drive(0.3, 0, 0);
-            }
-            drive(0, 0, 0);
         }
-
-
-}
+    }
 
     public void drive(double x, double y , double rx) {
         // Denominator is the largest motor power (absolute value) or 1
@@ -252,7 +179,7 @@ public class HPAuton extends LinearOpMode {
         goToPosition(armScore1, motorArmLeft); //Left Arm
         goToPosition(armScore1, motorArmRight, motorArmLeft.getCurrentPosition()); //Right Arm
         telemetry.addData("Motor Front Left Encoder Pos", motorFrontLeft.getCurrentPosition());
-            telemetry.update();
+        telemetry.update();
     }
     public void driveScore2(double x, double y , double rx) {
         // Denominator is the largest motor power (absolute value) or 1
